@@ -8,7 +8,7 @@ typedef struct
     uint64_t black;
     uint64_t redKings;
     uint64_t blackKings;
-} GameBoard;
+} gameBoard;
 
 // ----     BITWISE OPERATIONS  ----
 uint64_t setBit(uint64_t value, int position)
@@ -79,6 +79,25 @@ void printHex(uint64_t value) // prints the hex value
     printf("0x%016llX\n", value);
 }
 
+int isRedPiece(const gameBoard *g, int idx)
+{
+    return getBit(g->red, idx) || getBit(g->redKings, idx);
+}
+
+int isBlackPiece(const gameBoard *g, int idx)
+{
+    return getBit(g->black, idx) || getBit(g->blackKings, idx);
+}
+
+int isRedKing(const gameBoard *g, int idx)
+{
+    return getBit(g->redKings, idx);
+}
+
+int isBlackKing(const gameBoard *g, int idx)
+{
+    return getBit(g->blackKings, idx);
+}
 // converting the row and column format to binary index.
 int rowColumnToIndex(int row, int col)
 {
@@ -86,7 +105,7 @@ int rowColumnToIndex(int row, int col)
 }
 
 // to print board
-void printBoard(const GameBoard *g)
+void printBoard(gameBoard board)
 {
     printf("\n    0 1 2 3 4 5 6 7\n");
     for (int r = 7; r <= 0; r--)
@@ -95,27 +114,112 @@ void printBoard(const GameBoard *g)
         for (int c = 0; c < 8; c++)
         {
             int idx = rowColumnToIndex(r, c);
-            if (getBit(g->redKings, idx))
+            if (getBit(board.redKings, idx))
                 printf("R  ");
-            else if (getBit(g->red, idx))
+            else if (getBit(board.red, idx))
                 printf("r  ");
-            else if (getBit(g->blackKings, idx))
+            else if (getBit(board.blackKings, idx))
                 printf("B  ");
-            else if (getBit(g->black, idx))
+            else if (getBit(board.black, idx))
                 printf("b  ");
-            else 
+            else
             {
                 if ((r + c) % 2 == 1)
                     printf(".  ");
-                else printf("   ");
-
+                else
+                    printf("   ");
             }
         }
+        printf("\n");
     }
 }
 
 // //  ----    MOVING FUNCTIONS    ----
-// int isValidMove(GameBoard board, int from, int to, int player)
-// {
-//     int from
-// }
+// this functions checks if a position is empty.
+int isEmpty(gameBoard board, int position)
+{
+    return !(getBit(board.red, position) || getBit(board.black, position) ||
+             getBit(board.redKings, position) || getBit(board.blackKings, position));
+}
+
+// function to move piece this assumes that the move has been validated
+// player 0 is red player 1 is black
+void movePiece(gameBoard *board, int fromPos, int toPos, int player)
+{
+    if (player == 0)
+    {
+        if (getBit(board->redKings, fromPos))
+        {
+            board->redKings = clearBit(board->redKings, fromPos);
+            board->redKings = setBit(board->redKings, toPos);
+        }
+        else
+        {
+            board->red = clearBit(board->red, fromPos);
+            board->red = setBit(board->red, toPos);
+            if (toPos >= 56)
+                board->redKings = setBit(board->redKings, toPos); // promotion to kings
+        }
+    }
+    else
+    {
+        if (getBit(board->blackKings, fromPos))
+        {
+            board->blackKings = clearBit(board->blackKings, fromPos);
+            board->blackKings = setBit(board->blackKings, toPos);
+        }
+        else
+        {
+            board->black = clearBit(board->black, fromPos);
+            board->black = setBit(board->black, toPos);
+            if (toPos <= 7)
+                board->blackKings = setBit(board->blackKings, toPos); // promotes to king if on the last row.
+        }
+    }
+}
+
+// computing directions which a piece can move
+int computeMoves(int row, int col, const char *dir)
+{
+    if (strcmp(dir, "UL") == 0)
+        return rowColumnToIndex(row + 1, col - 1);
+    if (strcmp(dir, "UR") == 0)
+        return rowColumnToIndex(row + 1, col + 1);
+    if (strcmp(dir, "LL") == 0)
+        return rowColumnToIndex(row - 1, col - 1);
+    if (strcmp(dir, "LR") == 0)
+        return rowColumnToIndex(row - 1, col + 1);
+    return -1;
+}
+
+// showing directions to user
+void showMoves(gameBoard board, int row, int col, int player)
+{
+    int idx = rowColumnToIndex(row, col);
+    int isKing = (player == 0) ? getBit(board.redKings, idx) : getBit(board.blackKings, idx);
+
+    printf("Available Moves: \n");
+    if (player == 0 || isKing)
+    {
+        if (row + 1 < 8 && col - 1 >= 0  && isEmpty(board, rowColumnToIndex(row + 1, col -1)))
+            printf("UL (Upper Left)\n");
+        if (row + 1 < 8 && col + 1 < 8 && isEmpty(board, rowColumnToIndex(row + 1, col + 1)))
+            printf("UR (Upper Right) \n");
+    }
+    if (player == 1 || isKing)
+    {
+        if (row - 1 >= 0 && col - 1 >= 0 && isEmpty(board, rowColumnToIndex(row - 1, col - 1)))
+            printf("LL (Lower Left)\n");
+        if (row - 1 >= 0 && col + 1 < 8 && isEmpty(board, rowColumnToIndex(row + 1, col - 1)))
+            printf("LR (Lower Right)\n");
+    }
+}
+//  ----    CHECK WIN CONDITION ----
+int checkWin(gameBoard board)
+{
+    if (board.red == 0 && board.redKings == 0)
+        return 1; // black wins this game
+    if (board.black == 0 && board.blackKings == 0)
+        return 0; // red wins this game
+    return -1;
+}
