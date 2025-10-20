@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 #include "bitboardcheckers.h"
 
 int main()
 {
     gameBoard game = {0, 0, 0, 0};
-    // initializing game
+    // initialiszing game
     int turn = 0;
     int row, col;
     char dir[3];
@@ -15,7 +18,7 @@ int main()
     {
         for (int c = (r + 1) % 2; c < 8; c += 2)
         {
-            game.black = setBit(game.black, rowColumnToIndex(r, c));
+            game.red = setBit(game.red, rowColumnToIndex(r, c));
         }
     }
 
@@ -24,14 +27,14 @@ int main()
     {
         for (int c = (r + 1) % 2; c < 8; c += 2)
         {
-            game.red = setBit(game.red, rowColumnToIndex(r, c));
+            game.black= setBit(game.black, rowColumnToIndex(r, c));
         }
     }
 
     while (1)
     {
         printBoard(game);
-        printf("%s's turn. Enter the piece row and column", turn == 0 ? "Red" : "Black");
+        printf("%s's turn.\nEnter the piece row and column: ", turn == 0 ? "Red" : "Black");
 
         scanf("%d %d", &row, &col);
 
@@ -57,7 +60,7 @@ int main()
         movePiece(&game, idx, to, turn);
 
         int winner = checkWin(game);
-        if (winner != 1)
+        if (winner != -1)
         {
             printBoard(game);
             printf("%s wins!\n", winner == 0? "Red": "Black");

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
-
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 //  ----    GAME STRUCTURE  ----
 typedef struct
 {
@@ -107,8 +109,8 @@ int rowColumnToIndex(int row, int col)
 // to print board
 void printBoard(gameBoard board)
 {
-    printf("\n    0 1 2 3 4 5 6 7\n");
-    for (int r = 7; r <= 0; r--)
+    printf("\n  0  1  2  3  4  5  6  7\n");
+    for (int r = 7; r >= 0; r--)
     {
         printf("%d ", r);
         for (int c = 0; c < 8; c++)
@@ -132,6 +134,7 @@ void printBoard(gameBoard board)
         }
         printf("\n");
     }
+    printf("\n");
 }
 
 // //  ----    MOVING FUNCTIONS    ----
@@ -210,7 +213,7 @@ void showMoves(gameBoard board, int row, int col, int player)
     {
         if (row - 1 >= 0 && col - 1 >= 0 && isEmpty(board, rowColumnToIndex(row - 1, col - 1)))
             printf("LL (Lower Left)\n");
-        if (row - 1 >= 0 && col + 1 < 8 && isEmpty(board, rowColumnToIndex(row + 1, col - 1)))
+        if (row - 1 >= 0 && col + 1 < 8 && isEmpty(board, rowColumnToIndex(row - 1, col + 1)))
             printf("LR (Lower Right)\n");
     }
 }
