@@ -19,6 +19,8 @@ turns alternate after each move. <br>
 
 You are also able to download the exe file to quickly startup but who trusts an exe file? <br>
 
+Makefile added as well. <br>
+
 i believe it should run good after that. 
 
 
