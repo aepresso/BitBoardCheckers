@@ -41,14 +41,11 @@ int main()
         showMoves(game, row, col, turn);
         printf("Enter direction (UL, UR, LL, LR): ");
         scanf("%2s", dir);
+        dir[2] = '\0';  
+        for (int i = 0; i < 2; i++)
+            dir[i] = toupper(dir[i]);
 
         int to = computeMoves(row, col, dir, 1);
-        if ((to == -1) || !isEmpty(game, to))
-        {
-            printf("Invalid direction or spot is taken.\n");
-            continue;
-        }
-
         int jumpTo = computeMoves(row, col, dir, 2);
         int midPiece = computeMoves(row, col, dir, 1);
         int canCapture = 0;
@@ -86,6 +83,7 @@ int main()
             if (to == -1 || !isEmpty(game, to))
             {
                 printf("Invalid direction or occupied\n");
+                continue;
             }
             movePiece(&game, idx, to, turn, -1);
         }
@@ -98,6 +96,7 @@ int main()
             break;
         }
         turn = 1 - turn;
+        // (system("cls"));
     }
     return 0;
 }

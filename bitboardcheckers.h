@@ -27,5 +27,6 @@ int computeMoves(int row, int col, const char *dir, int step);
 void showMoves(gameBoard board, int row, int col, int player);
 int checkWin(gameBoard board);
 void initBoard(gameBoard *board);
+int tryMakeMove (gameBoard *game, int row, int col, const char *dir, int player);
 
 #endif

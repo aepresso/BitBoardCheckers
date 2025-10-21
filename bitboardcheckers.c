@@ -50,6 +50,7 @@ uint64_t countBits(uint64_t value) // iterates the integer untill all bits have 
         count += value & 1ULL;
         value = value >> 1;
     }
+    return count;
 }
 
 //  ----    SHIFT BITS  ----
@@ -141,12 +142,13 @@ void printBoard(gameBoard board)
 void initBoard(gameBoard *board)
 {
     for (int r = 0; r < 3; r++)
-        for (int c = (r + 1) % 2; c < 8; c += 2)
-            board->red = setBit(board->red, rowColumnToIndex(r, c));
-
+        for (int c = 0; c < 8; c++)
+            if ((r + c) % 2 == 1)
+                board->red = setBit(board->red, rowColumnToIndex(r, c));
     for (int r = 5; r < 8; r++)
-        for (int c = (r + 1) % 2; c < 8; c += 2)
-            board->black = setBit(board->black, rowColumnToIndex(r, c));
+        for (int c = 0; c < 8; c++)
+            if ((r + c) % 2 == 1)
+                board->black = setBit(board->black, rowColumnToIndex(r, c));
 }
 // //  ----    MOVING FUNCTIONS    ----
 // this functions checks if a position is empty.
@@ -264,7 +266,7 @@ void showMoves(gameBoard board, int row, int col, int player)
         int jumpTo = computeMoves(row, col, dir, 2);
         int middleRow = computeMoves(row, col, dir, 1);
 
-        if (jumpTo != -1 && middleRow != 1)
+        if (jumpTo != -1 && middleRow != -1)
         {
             // integer middle row index is equal to the compute move of middle row.
             int midIdx = middleRow;
@@ -282,18 +284,41 @@ void showMoves(gameBoard board, int row, int col, int player)
                 totalNumOfMoves++;
                 continue;
             }
-            int to = computeMoves(row, col, dir, 1);
-            {
-                if (to != -1 && isEmpty(board, to))
-                {
-                    printf("%s\n", dir);
-                    totalNumOfMoves++;
-                }
-            }
+        }
+
+        // normal moves
+        int to = computeMoves(row, col, dir, 1);
+        if (to != -1 && isEmpty(board, to))
+        {
+            printf("%s\n", dir);
+            totalNumOfMoves++;
         }
     }
-    // normal moves
+    if (totalNumOfMoves == 0)
+    {
+        printf("No valid moves avaiable\n");
+    }
 }
+
+int tryMakeMove(gameBoard *game, int row, int col, const char *dir, int player)
+{
+    int fromIdx = rowColumnToIndex(row, col);
+    int mid = computeMoves(row, col, dir, 1);
+    int jumpTo = computeMoves(row, col, dir, 2);
+    int to = computeMoves(row, col, dir, 1);
+
+    // Capture first
+    if (jumpTo != -1 && mid != -1)
+    {
+        int isEnemy = (player == 0) ? isBlackPiece(game, mid) : isRedPiece(game, mid);
+        if (isEnemy && isEmpty(*game, jumpTo))
+        {
+            movePiece(game, fromIdx, jumpTo, player, mid);
+            return 1;
+        }
+    }
+}
+
 //  ----    CHECK WIN CONDITION ----
 int checkWin(gameBoard board)
 {
