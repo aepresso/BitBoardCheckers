@@ -137,6 +137,17 @@ void printBoard(gameBoard board)
     printf("\n");
 }
 
+// create the board
+void initBoard(gameBoard *board)
+{
+    for (int r = 0; r < 3; r++)
+        for (int c = (r + 1) % 2; c < 8; c += 2)
+            board->red = setBit(board->red, rowColumnToIndex(r, c));
+
+    for (int r = 5; r < 8; r++)
+        for (int c = (r + 1) % 2; c < 8; c += 2)
+            board->black = setBit(board->black, rowColumnToIndex(r, c));
+}
 // //  ----    MOVING FUNCTIONS    ----
 // this functions checks if a position is empty.
 int isEmpty(gameBoard board, int position)
@@ -147,8 +158,15 @@ int isEmpty(gameBoard board, int position)
 
 // function to move piece this assumes that the move has been validated
 // player 0 is red player 1 is black
-void movePiece(gameBoard *board, int fromPos, int toPos, int player)
+void movePiece(gameBoard *board, int fromPos, int toPos, int player, int capturedIdx)
 {
+    if (capturedIdx != -1)
+    {
+        board->red = clearBit(board->red, capturedIdx);
+        board->black = clearBit(board->black, capturedIdx);
+        board->redKings = clearBit(board->redKings, capturedIdx);
+        board->blackKings = clearBit(board->blackKings, capturedIdx);
+    }
     if (player == 0)
     {
         if (getBit(board->redKings, fromPos))
@@ -182,16 +200,39 @@ void movePiece(gameBoard *board, int fromPos, int toPos, int player)
 }
 
 // computing directions which a piece can move
-int computeMoves(int row, int col, const char *dir)
+// one step is regular move two step is a captures
+// nc is number row and nc numer column
+int computeMoves(int row, int col, const char *dir, int step)
 {
     if (strcmp(dir, "UL") == 0)
-        return rowColumnToIndex(row + 1, col - 1);
+    {
+        int nr = row + step, nc = col - step;
+        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8)
+            return rowColumnToIndex(nr, nc);
+        return -1;
+    }
     if (strcmp(dir, "UR") == 0)
-        return rowColumnToIndex(row + 1, col + 1);
+    {
+        int nr = row + step, nc = col + step;
+        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8)
+            return rowColumnToIndex(nr, nc);
+        return -1;
+    }
     if (strcmp(dir, "LL") == 0)
-        return rowColumnToIndex(row - 1, col - 1);
+    {
+        int nr = row - step, nc = col - step;
+        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8)
+            return rowColumnToIndex(nr, nc);
+        return -1;
+    }
     if (strcmp(dir, "LR") == 0)
-        return rowColumnToIndex(row - 1, col + 1);
+    {
+
+        int nr = row - step, nc = col + step;
+        if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8)
+            return rowColumnToIndex(nr, nc);
+        return -1;
+    }
     return -1;
 }
 
@@ -200,22 +241,58 @@ void showMoves(gameBoard board, int row, int col, int player)
 {
     int idx = rowColumnToIndex(row, col);
     int isKing = (player == 0) ? getBit(board.redKings, idx) : getBit(board.blackKings, idx);
+    int totalNumOfMoves = 0;
 
     printf("Available Moves: \n");
-    if (player == 0 || isKing)
+
+    // array to hold directions
+    const char *directions[4] = {"UL", "UR", "LL", "LR"};
+
+    // a for loop to check every direction
+    for (int i = 0; i < 4; i++)
     {
-        if (row + 1 < 8 && col - 1 >= 0  && isEmpty(board, rowColumnToIndex(row + 1, col -1)))
-            printf("UL (Upper Left)\n");
-        if (row + 1 < 8 && col + 1 < 8 && isEmpty(board, rowColumnToIndex(row + 1, col + 1)))
-            printf("UR (Upper Right) \n");
+        const char *dir = directions[i];
+
+        // check if directions is allowed by king or not a king
+        if (player == 0 && !isKing && (strcmp(dir, "LL") == 0 || strcmp(dir, "LR") == 0))
+            continue;
+        if (player == 1 && !isKing && (strcmp(dir, "UL") == 0 || strcmp(dir, "UR") == 0))
+            continue;
+
+        // capture check
+        // integer for row col directions and steps.
+        int jumpTo = computeMoves(row, col, dir, 2);
+        int middleRow = computeMoves(row, col, dir, 1);
+
+        if (jumpTo != -1 && middleRow != 1)
+        {
+            // integer middle row index is equal to the compute move of middle row.
+            int midIdx = middleRow;
+            // checkings if the middle square is an enemy
+            int isThatAnEnemy = 0;
+            if (player == 0 && (isBlackPiece(&board, midIdx)))
+                isThatAnEnemy = 1;
+            if (player == 1 && (isRedPiece(&board, midIdx)))
+                isThatAnEnemy = 1;
+
+            // can they make the jump
+            if (isThatAnEnemy && isEmpty(board, jumpTo))
+            {
+                printf("%s (capture)\n", dir);
+                totalNumOfMoves++;
+                continue;
+            }
+            int to = computeMoves(row, col, dir, 1);
+            {
+                if (to != -1 && isEmpty(board, to))
+                {
+                    printf("%s\n", dir);
+                    totalNumOfMoves++;
+                }
+            }
+        }
     }
-    if (player == 1 || isKing)
-    {
-        if (row - 1 >= 0 && col - 1 >= 0 && isEmpty(board, rowColumnToIndex(row - 1, col - 1)))
-            printf("LL (Lower Left)\n");
-        if (row - 1 >= 0 && col + 1 < 8 && isEmpty(board, rowColumnToIndex(row - 1, col + 1)))
-            printf("LR (Lower Right)\n");
-    }
+    // normal moves
 }
 //  ----    CHECK WIN CONDITION ----
 int checkWin(gameBoard board)

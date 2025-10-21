@@ -13,32 +13,24 @@ int main()
     int row, col;
     char dir[3];
 
-    // black pieces set in their respective spots
-    for (int r = 0; r < 3; r++)
-    {
-        for (int c = (r + 1) % 2; c < 8; c += 2)
-        {
-            game.red = setBit(game.red, rowColumnToIndex(r, c));
-        }
-    }
-
-    // red pieces set in their respective spots
-    for (int r = 5; r < 8; r++)
-    {
-        for (int c = (r + 1) % 2; c < 8; c += 2)
-        {
-            game.black= setBit(game.black, rowColumnToIndex(r, c));
-        }
-    }
+    initBoard(&game);
 
     while (1)
     {
         printBoard(game);
-        printf("%s's turn.\nEnter the piece row and column: ", turn == 0 ? "Red" : "Black");
+        printf("%s's turn.\nEnter the piece row and column (Type Num [SPACE] Num): ", turn == 0 ? "Red" : "Black");
 
-        scanf("%d %d", &row, &col);
+        if (scanf("%d %d", &row, &col) != 2)
+        {
+            printf("You cannot do that try again.\n");
+            while (getchar() != '\n')
+                ; // clear buffer
+            continue;
+        }
 
         int idx = rowColumnToIndex(row, col);
+
+        // checking if there is actually a piece that the player chooses.
         if ((turn == 0 && !(getBit(game.red, idx) || getBit(game.redKings, idx))) ||
             (turn == 1 && !(getBit(game.black, idx) || getBit(game.blackKings, idx))))
         {
@@ -50,20 +42,59 @@ int main()
         printf("Enter direction (UL, UR, LL, LR): ");
         scanf("%2s", dir);
 
-        int to = computeMoves(row, col, dir);
+        int to = computeMoves(row, col, dir, 1);
         if ((to == -1) || !isEmpty(game, to))
         {
             printf("Invalid direction or spot is taken.\n");
             continue;
         }
 
-        movePiece(&game, idx, to, turn);
+        int jumpTo = computeMoves(row, col, dir, 2);
+        int midPiece = computeMoves(row, col, dir, 1);
+        int canCapture = 0;
+        int capturedIdx = -1; // default no capture yet
+
+        if (jumpTo != -1 && isEmpty(game, jumpTo)) // if this is a valid move and is empty
+        {
+            int enemy = 0;
+            if (turn == 0)
+            {
+                enemy = (getBit(game.black, midPiece) || getBit(game.blackKings, midPiece));
+            }
+            else
+            {
+                enemy = (getBit(game.red, midPiece) || getBit(game.redKings, midPiece));
+            }
+            if (enemy)
+            {
+                canCapture = 1;
+            }
+
+            if (canCapture)
+            {
+                capturedIdx = midPiece;
+            }
+        }
+
+        if (capturedIdx != -1)
+        {
+            printf("Capture perfomed!\n");
+            movePiece(&game, idx, jumpTo, turn, capturedIdx);
+        }
+        else
+        {
+            if (to == -1 || !isEmpty(game, to))
+            {
+                printf("Invalid direction or occupied\n");
+            }
+            movePiece(&game, idx, to, turn, -1);
+        }
 
         int winner = checkWin(game);
         if (winner != -1)
         {
             printBoard(game);
-            printf("%s wins!\n", winner == 0? "Red": "Black");
+            printf("%s wins!\n", winner == 0 ? "Red" : "Black");
             break;
         }
         turn = 1 - turn;

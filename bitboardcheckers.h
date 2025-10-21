@@ -1,8 +1,6 @@
 #ifndef BITBOARDCHECKERS_H // header file for operations
 #define BITBOARDCHECKERS_H
 
-#include <stdint.h> 
-
 typedef struct
 {
     uint64_t red;
@@ -24,9 +22,10 @@ int isRedKing(const gameBoard *g, int idx);
 int isBlackKing(const gameBoard *g, int idx);
 int rowColumnToIndex(int row, int col);
 int isEmpty(gameBoard board, int position);
-void movePiece(gameBoard *board, int fromPos, int toPos, int player);
-int computeMoves(int row, int col, const char *dir);
+void movePiece(gameBoard *board, int fromPos, int toPos, int player, int capturedIdx);
+int computeMoves(int row, int col, const char *dir, int step);
 void showMoves(gameBoard board, int row, int col, int player);
 int checkWin(gameBoard board);
+void initBoard(gameBoard *board);
 
 #endif
