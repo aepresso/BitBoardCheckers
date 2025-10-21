@@ -11,6 +11,7 @@ Download both main.c, bitboardcheckers.c, and bitboardcheckers.h <br>
 '''bash <br>
 gcc main.c bitboardcheckers.c -checkers <br>
 ./checkers <br>
+'''
 
 i believe it should run good after that. 
 
