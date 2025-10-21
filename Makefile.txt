@@ -1,0 +1,35 @@
+# Makefile for Bitboard Checkers
+
+# Compiler
+CC = gcc
+
+# Compiler flags
+CFLAGS = -Wall -Wextra -std=c11
+
+# Target executable
+TARGET = checkers
+
+# Source files
+SRCS = main.c bitboardcheckers.c
+
+# Header files
+HDRS = bitboardcheckers.h
+
+# Object files
+OBJS = $(SRCS:.c=.o)
+
+# Default build target
+all: $(TARGET)
+
+# Compile executable from object files
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
+
+# Compile .c files into .o files
+%.o: %.c $(HDRS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean up
+.PHONY: clean
+clean:
+	rm -f $(TARGET) $(OBJS)
